@@ -1,0 +1,264 @@
+package com.company;
+
+import java.util.EnumMap;
+import java.util.Scanner;
+import java.util.zip.ZipInputStream;
+
+public class Main {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        String gameState = "         ";
+
+        char[] a = new char[9];
+        for (int i=0; i<9; i++)
+            a[i] = gameState.charAt(i);
+
+        char[][] b = tab2To3(a);
+        printTab(b);
+
+
+        boolean validChoice = false;
+        boolean gameEnd = false;
+        String output = "";
+        char player = 'X';
+        do {
+            do {
+                int x, y;
+                System.out.print("Enter the coordinates: ");
+                String input = scanner.nextLine();
+                int checkInput = checkInput(input);
+                if (checkInput == -1) {
+                    System.out.println("You should enter numbers!");
+                    continue;
+                } else if (checkInput == 0) {
+                    System.out.println("Coordinates should be from 1 to 3!");
+                    continue;
+                } else {
+                    x = Character.getNumericValue(input.charAt(0)) - 1;
+                    y = Character.getNumericValue(input.charAt(2)) - 1;
+                }
+                boolean checkPos = checkPos(b, x, y);
+                if (!checkPos) {
+                    System.out.println("This cell is occupied! Choose another one!");
+                    continue;
+                } else {
+                    b[x][y] = player;
+                    if (player=='X')
+                        player = 'O';
+                    else
+                        player = 'X';
+                    output = tabToString(b);
+                    validChoice = true;
+                }
+
+            } while (!validChoice);
+
+            printTab(b);
+            int state = checkState(b);
+            if (state==-1)
+                continue;
+            if (state==0){
+                gameEnd = true;
+                System.out.println("Draw");
+            } else if (state==1){
+                gameEnd = true;
+                System.out.println("X wins");
+            } else {
+                gameEnd = true;
+                System.out.println("O wins");
+            }
+
+        } while (!gameEnd);
+
+        /*for (int i=0; i<9; i++)
+            a[i] = output.charAt(i);
+
+        int[] numbers = count(a); // {X, O, _}
+        int ballance = numbers[0]-numbers[1];
+        int xLines = checkLine(a, 'X');
+        int oLines = checkLine(a, 'O');
+
+        if (ballance>1 || ballance<-1 || xLines>1 || oLines>1 || (xLines==oLines && xLines!=0))
+            System.out.println("Impossible");
+        else if (xLines==0 && oLines==0 && numbers[2]>0)
+            System.out.println("Game not finished");
+        else if (xLines==0 && oLines==0)
+            System.out.println("Draw");
+        else if (xLines==1)
+            System.out.println("X wins");
+        else
+            System.out.println("O wins");*/
+    }
+
+    static int checkState(char[][] tab){
+        int[] numbers = count(tab); // {X, O, _}
+        int ballance = numbers[0]-numbers[1];
+        int xLines = checkLine(tab, 'X');
+        int oLines = checkLine(tab, 'O');
+
+        if (ballance>1 || ballance<-1 || xLines>1 || oLines>1 || (xLines==oLines && xLines!=0))
+            return -2; // System.out.println("Impossible");
+        else if (xLines==0 && oLines==0 && numbers[2]>0)
+            return -1; //System.out.println("Game not finished");
+        else if (xLines==0 && oLines==0)
+            return 0; //System.out.println("Draw");
+        else if (xLines==1)
+            return 1; //System.out.println("X wins");
+        else
+            return 2; //System.out.println("O wins");
+    }
+
+    static void printTab(char[] tab){
+        System.out.println("---------");
+        System.out.println("| " + tab[0] + " " + tab[1] + " " + tab[2] + " |");
+        System.out.println("| " + tab[3] + " " + tab[4] + " " + tab[5] + " |");
+        System.out.println("| " + tab[6] + " " + tab[7] + " " + tab[8] + " |");
+        System.out.println("---------");
+    }
+
+    static void printTab(char[][] tab){
+        System.out.println("---------");
+        System.out.println("| " + tab[0][0] + " " + tab[0][1] + " " + tab[0][2] + " |");
+        System.out.println("| " + tab[1][0] + " " + tab[1][1] + " " + tab[1][2] + " |");
+        System.out.println("| " + tab[2][0] + " " + tab[2][1] + " " + tab[2][2] + " |");
+        System.out.println("---------");
+    }
+
+    static String tabToString(char[][] tab){
+        return Integer.toString(tab[0][0]).concat(Integer.toString(tab[0][1])).concat(Integer.toString(tab[0][2])).
+        concat(Integer.toString(tab[1][0])).concat(Integer.toString(tab[1][1])).concat(Integer.toString(tab[1][2])).
+        concat(Integer.toString(tab[2][0])).concat(Integer.toString(tab[2][1])).concat(Integer.toString(tab[2][2]));
+    }
+
+    static int[] count(char[] tab){
+        int x = 0;
+        int o = 0;
+        int empty = 0;
+        for (int i=0; i<tab.length; i++){
+            if (tab[i]=='X')
+                x++;
+            if (tab[i]=='O')
+                o++;
+            if (tab[i]==' ')
+                empty++;
+        }
+
+        int[] a = {x, o, empty};
+        return a;
+    }
+
+    static int[] count(char[][] tab){
+        int x = 0;
+        int o = 0;
+        int empty = 0;
+        for (int i=0; i<3; i++){
+            for (int j=0; j<3; j++) {
+                if (tab[i][j] == 'X')
+                    x++;
+                if (tab[i][j] == 'O')
+                    o++;
+                if (tab[i][j] == ' ')
+                    empty++;
+            }
+        }
+
+        int[] a = {x, o, empty};
+        return a;
+    }
+
+    static int checkLine(char[] tab, char x){
+        int number = 0;
+        if (tab[0]==x && tab[1]==x && tab[2]==x)
+            number++;
+        if (tab[3]==x && tab[4]==x && tab[5]==x)
+            number++;
+        if (tab[6]==x && tab[7]==x && tab[8]==x)
+            number++;
+
+        if (tab[0]==x && tab[3]==x && tab[6]==x)
+            number++;
+        if (tab[1]==x && tab[4]==x && tab[7]==x)
+            number++;
+        if (tab[2]==x && tab[5]==x && tab[8]==x)
+            number++;
+
+        if (tab[0]==x && tab[4]==x && tab[8]==x)
+            number++;
+        if (tab[2]==x && tab[4]==x && tab[6]==x)
+            number++;
+
+        return number;
+    }
+
+    static int checkLine(char[][] tab, char x){
+        int number = 0;
+        if (tab[0][0]==x && tab[0][1]==x && tab[0][2]==x)
+            number++;
+        if (tab[1][0]==x && tab[1][1]==x && tab[1][2]==x)
+            number++;
+        if (tab[2][0]==x && tab[2][1]==x && tab[2][2]==x)
+            number++;
+
+        if (tab[0][0]==x && tab[1][0]==x && tab[2][0]==x)
+            number++;
+        if (tab[0][1]==x && tab[1][1]==x && tab[2][1]==x)
+            number++;
+        if (tab[0][2]==x && tab[1][2]==x && tab[2][2]==x)
+            number++;
+
+        if (tab[0][0]==x && tab[1][1]==x && tab[2][2]==x)
+            number++;
+        if (tab[0][2]==x && tab[1][1]==x && tab[2][0]==x)
+            number++;
+
+        return number;
+    }
+
+    static char[][] tab2To3 (char[] tab){
+        char[][] tab2 = new char[3][3];
+        int pos = 0;
+        for (int i=0; i<3; i++)
+            for (int j=0; j<3; j++){
+                tab2[i][j] = tab[pos];
+                pos++;
+            }
+        return tab2;
+    }
+
+//    static boolean checkChar(char a){
+//        boolean isNumber = Character.isDigit(a);
+//        return isNumber;
+//    }
+
+    static boolean checkPos(char[][] tab, int x, int y){
+        if (tab[x][y]!=' ')
+            return false;
+        else
+            return true;
+    }
+
+    static int checkInput(String s){
+        // return:
+        // -1 - not a number
+        // 0 - wrong number
+        // 1 - OK
+        if (s.length()!=3)
+            return -1;
+        char x = s.charAt(0);
+        char y = s.charAt(2);
+        boolean isNumber = Character.isDigit(x);
+        if (!isNumber)
+            return -1;
+        isNumber = Character.isDigit(y);
+        if (!isNumber)
+            return -1;
+        int a = Character.getNumericValue(x);
+        int b = Character.getNumericValue(y);
+        if (a<1 || b<1 || a>3 || b>3)
+            return 0;
+
+        return 1;
+    }
+
+}
